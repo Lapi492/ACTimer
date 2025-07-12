@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Animal Crossing Town Tune Player</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎵 Animal Crossing Town Tune Player</h1>
+            <p>Play your custom town tune at scheduled times!</p>
+        </header>
+
+        <main>
+            <section class="schedule">
+                <h2>⏰ Schedule Settings</h2>
+                <div class="schedule-options">
+                    <div class="option">
+                        <input type="radio" id="hourly" name="schedule" value="hourly" checked>
+                        <label for="hourly">Play every hour (1:00, 2:00, 3:00, etc.)</label>
+                    </div>
+                    <div class="option">
+                        <input type="radio" id="custom" name="schedule" value="custom">
+                        <label for="custom">Custom time</label>
+                    </div>
+                </div>
+
+                <div class="custom-time" id="customTimeSection" style="display: none;">
+                    <div class="time-inputs">
+                        <div class="input-group">
+                            <label for="customHour">Hour:</label>
+                            <input type="number" id="customHour" min="0" max="23" value="12">
+                        </div>
+                        <div class="input-group">
+                            <label for="customMinute">Minute:</label>
+                            <input type="number" id="customMinute" min="0" max="59" value="0">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="schedule-options">
+                    <div class="option">
+                        <input type="checkbox" id="scheduledFastPlay" name="scheduledFastPlay">
+                        <label for="scheduledFastPlay">Play at fast speed (2.0x) during scheduled playback</label>
+                    </div>
+                </div>
+
+                <div class="schedule-controls">
+                    <button id="startSchedule" class="btn btn-success">🚀 Start Schedule</button>
+                    <button id="stopSchedule" class="btn btn-danger">⏹️ Stop Schedule</button>
+                </div>
+            </section>
+
+            <section class="tune-input collapsible">
+                <div class="section-header" onclick="toggleSection('tuneSection')">
+                    <h2>🎼 Town Tune Setup</h2>
+                    <span class="toggle-icon">▼</span>
+                </div>
+                <div class="section-content" id="tuneSection">
+                    <div class="input-group">
+                        <label for="tuneUrl">Town Tune URL (from <a href="https://ac-tune-maker.aikats.us/" target="_blank">AC Tune Maker</a>):</label>
+                        <input type="url" id="tuneUrl" placeholder="https://ac-tune-maker.aikats.us/#/tune/CECGfGBDGzqzc--z/AC%20Tune%20Maker">
+                        <button id="loadTune" class="btn">Load Tune</button>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="tuneCode">Town Tune Code:</label>
+                        <input type="text" id="tuneCode" placeholder="CECGfGBDGzqzc--z" readonly>
+                        <button id="editTune" class="btn">Edit</button>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="tuneName">Tune Name:</label>
+                        <input type="text" id="tuneName" placeholder="My Town Tune">
+                    </div>
+
+                    <div class="playback-controls">
+                        <h3>🎮 Playback Controls</h3>
+                        <div class="controls">
+                            <button id="playTune" class="btn btn-primary">▶️ Play Tune</button>
+                            <button id="playTuneFast" class="btn btn-warning">⚡ Play Fast (2.0x)</button>
+                            <button id="stopTune" class="btn btn-secondary">⏹️ Stop</button>
+                            <div class="volume-control">
+                                <label for="volume">Volume:</label>
+                                <input type="range" id="volume" min="0" max="100" value="50">
+                                <span id="volumeValue">50%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="status-recent collapsible">
+                <div class="section-header" onclick="toggleSection('statusSection')">
+                    <h2>📊 Status & Recent Plays</h2>
+                    <span class="toggle-icon">▼</span>
+                </div>
+                <div class="section-content" id="statusSection">
+                    <div class="status-info">
+                        <p><strong>Schedule Status:</strong> <span id="scheduleStatus">Stopped</span></p>
+                        <p><strong>Next Play:</strong> <span id="nextPlay">-</span></p>
+                        <p><strong>Current Tune:</strong> <span id="currentTune">None loaded</span></p>
+                    </div>
+                    
+                    <div class="recent-plays">
+                        <h3>📝 Recent Plays</h3>
+                        <div id="recentPlays" class="plays-list">
+                            <p class="no-plays">No tunes played yet</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        function toggleSection(sectionId) {
+            const content = document.getElementById(sectionId);
+            const header = content.previousElementSibling;
+            const icon = header.querySelector('.toggle-icon');
+            
+            if (content.style.display === 'none') {
+                content.style.display = 'block';
+                icon.textContent = '▼';
+            } else {
+                content.style.display = 'none';
+                icon.textContent = '▶';
+            }
+        }
+    </script>
+</body>
+</html> 
