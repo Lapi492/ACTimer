@@ -131,7 +131,7 @@ const translations = {
 // Language management
 class LanguageManager {
     constructor() {
-        this.currentLanguage = localStorage.getItem('language') || 'en';
+        this.currentLanguage = localStorage.getItem('language') || 'ko';
         this.init();
     }
     
