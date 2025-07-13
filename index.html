@@ -13,39 +13,45 @@
 <body>
     <div class="container">
         <header>
-            <h1>🎵 Animal Crossing Town Tune Player</h1>
-            <p>Play your custom town tune at scheduled times!</p>
+            <h1></h1>
+            <p></p>
         </header>
 
         <main>
             <section class="schedule collapsible">
                 <div class="section-header">
-                    <h2>⏰ Schedule Settings</h2>
+                    <h2>
+                        <img src="images/schedule_icon.png" alt="Schedule" class="section-icon">
+                        <span class="section-title"></span>
+                    </h2>
                 </div>
                 <div class="section-content">
                     <div class="schedule-options">
-                    <div class="option">
-                        <input type="radio" id="hourly" name="schedule" value="hourly" checked>
-                        <label for="hourly">Play every hour (1:00, 2:00, 3:00, etc.)</label>
+                        <img src="images/schedule_image.png" alt="Schedule" class="schedule-image">
+                        <div class="schedule-options-content">
+                            <div class="option">
+                                <input type="radio" id="hourly" name="schedule" value="hourly" checked>
+                                <label for="hourly"></label>
+                            </div>
+                            <div class="option">
+                                <input type="radio" id="custom" name="schedule" value="custom">
+                                <label for="custom"></label>
+                            </div>
+                            <div class="option">
+                                <input type="radio" id="minutesLater" name="schedule" value="minutesLater">
+                                <label for="minutesLater"></label>
+                            </div>
+                        </div>
                     </div>
-                    <div class="option">
-                        <input type="radio" id="custom" name="schedule" value="custom">
-                        <label for="custom">Custom time</label>
-                    </div>
-                    <div class="option">
-                        <input type="radio" id="minutesLater" name="schedule" value="minutesLater">
-                        <label for="minutesLater">Play in N minutes</label>
-                    </div>
-                </div>
 
                 <div class="custom-time" id="customTimeSection" style="display: none;">
                     <div class="time-inputs">
                         <div class="input-group">
-                            <label for="customHour">Hour:</label>
+                            <label for="customHour"></label>
                             <input type="number" id="customHour" min="0" max="23" value="12">
                         </div>
                         <div class="input-group">
-                            <label for="customMinute">Minute:</label>
+                            <label for="customMinute"></label>
                             <input type="number" id="customMinute" min="0" max="59" value="0">
                         </div>
                     </div>
@@ -54,7 +60,7 @@
                 <div class="minutes-later" id="minutesLaterSection" style="display: none;">
                     <div class="time-inputs">
                         <div class="input-group">
-                            <label for="minutesLaterInput">Minutes from now:</label>
+                            <label for="minutesLaterInput"></label>
                             <input type="number" id="minutesLaterInput" min="1" max="1440" value="5">
                         </div>
                     </div>
@@ -63,44 +69,47 @@
                 <div class="schedule-options">
                     <div class="option">
                         <input type="checkbox" id="scheduledFastPlay" name="scheduledFastPlay">
-                        <label for="scheduledFastPlay">Play at fast speed (2.0x) during scheduled playback</label>
+                        <label for="scheduledFastPlay"></label>
                     </div>
                 </div>
 
                 <div class="schedule-controls">
-                    <button id="startSchedule" class="btn btn-success">🚀 Start Schedule</button>
-                    <button id="stopSchedule" class="btn btn-danger">⏹️ Stop Schedule</button>
+                    <button id="startSchedule" class="btn btn-success"></button>
+                    <button id="stopSchedule" class="btn btn-danger"></button>
                 </div>
                 </div>
             </section>
 
             <section class="tune-input collapsible">
                 <div class="section-header" onclick="toggleSection('tuneSection')">
-                    <h2>🎼 Town Tune Setup</h2>
+                    <h2>
+                        <img src="images/tune_icon.png" alt="Tune" class="section-icon">
+                        <span class="section-title"></span>
+                    </h2>
                     <span class="toggle-icon">▼</span>
                 </div>
                 <div class="section-content" id="tuneSection">
                     <div class="input-group">
-                        <label for="tuneUrl">Town Tune URL (from <a href="https://ac-tune-maker.aikats.us/" target="_blank">AC Tune Maker</a>):</label>
-                        <input type="url" id="tuneUrl" placeholder="https://ac-tune-maker.aikats.us/#/tune/CECGfGBDGzqzc--z/AC%20Tune%20Maker">
-                        <button id="loadTune" class="btn">Load Tune</button>
+                        <label for="tuneUrl"></label>
+                        <input type="url" id="tuneUrl" placeholder="">
+                        <button id="loadTune" class="btn"></button>
                     </div>
                     
                     <div class="input-group">
-                        <label for="tuneCode">Town Tune Code:</label>
-                        <input type="text" id="tuneCode" placeholder="CECGfGBDGzqzc--z" readonly>
-                        <button id="editTune" class="btn">Edit</button>
+                        <label for="tuneCode"></label>
+                        <input type="text" id="tuneCode" placeholder="" readonly>
+                        <button id="editTune" class="btn"></button>
                     </div>
 
 
 
                     <div class="playback-controls">
-                        <h3>🎮 Playback Controls</h3>
+                        <h3></h3>
                         <div class="controls">
-                            <button id="playTune" class="btn btn-primary">▶️ Play Tune</button>
-                            <button id="playTuneFast" class="btn btn-warning">⚡ Play Fast (2.0x)</button>
+                            <button id="playTune" class="btn btn-primary"></button>
+                            <button id="playTuneFast" class="btn btn-warning"></button>
                             <div class="volume-control">
-                                <label for="volume">Volume:</label>
+                                <label for="volume"></label>
                                 <input type="range" id="volume" min="0" max="100" value="50">
                                 <span id="volumeValue">50%</span>
                             </div>
@@ -111,26 +120,36 @@
 
             <section class="status-recent collapsible">
                 <div class="section-header" onclick="toggleSection('statusSection')">
-                    <h2>📊 Status & Recent Plays</h2>
+                    <h2>
+                        <img src="images/status_icon.png" alt="Status" class="section-icon">
+                        <span class="section-title"></span>
+                    </h2>
                     <span class="toggle-icon">▼</span>
                 </div>
                 <div class="section-content" id="statusSection">
                     <div class="status-info">
-                        <p><strong>Schedule Status:</strong> <span id="scheduleStatus">Stopped</span></p>
-                        <p><strong>Next Play:</strong> <span id="nextPlay">-</span></p>
-                        <p><strong>Time Left:</strong> <span id="timeLeft">-</span></p>
-                        <p><strong>Current Tune:</strong> <span id="currentTune">None loaded</span></p>
+                        <p><strong></strong> <span id="scheduleStatus"></span></p>
+                        <p><strong></strong> <span id="nextPlay">-</span></p>
+                        <p><strong></strong> <span id="timeLeft">-</span></p>
+                        <p><strong></strong> <span id="currentTune"></span></p>
                     </div>
                     
                     <div class="recent-plays">
-                        <h3>📝 Recent Plays</h3>
+                        <h3></h3>
                         <div id="recentPlays" class="plays-list">
-                            <p class="no-plays">No tunes played yet</p>
+                            <p class="no-plays"></p>
                         </div>
                     </div>
                 </div>
             </section>
         </main>
+
+        <footer>
+            <div class="footer-links">
+                <a href="mailto:jhkim@soaringtech.it">Contact</a>
+                <a href="https://github.com/Lapi492/ACTimer" target="_blank" rel="noopener noreferrer">Github</a>
+            </div>
+        </footer>
     </div>
 
     <script src="translations.js"></script>

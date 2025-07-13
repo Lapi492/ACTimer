@@ -19,7 +19,7 @@ const translations = {
         
         // Tune setup section
         tuneSetupTitle: "Town Tune Setup",
-        tuneUrlLabel: "Town Tune URL (from AC Tune Maker):",
+        tuneUrlLabel: "Town Tune URL (from <a href=\"https://ac-tune-maker.aikats.us/\" target=\"_blank\">AC Tune Maker</a>):",
         tuneUrlPlaceholder: "https://ac-tune-maker.aikats.us/#/tune/CECGfGBDGzqzc--z/AC%20Tune%20Maker",
         loadTuneBtn: "Load Tune",
         tuneCodeLabel: "Town Tune Code:",
@@ -83,7 +83,7 @@ const translations = {
         
         // Tune setup section
         tuneSetupTitle: "마을멜로디 설정",
-        tuneUrlLabel: "마을멜로디 URL (AC Tune Maker 하단의 주소):",
+        tuneUrlLabel: "마을멜로디 URL (<a href=\"https://ac-tune-maker.aikats.us/\" target=\"_blank\">AC Tune Maker</a> 하단의 주소):",
         tuneUrlPlaceholder: "https://ac-tune-maker.aikats.us/#/tune/CECGfGBDGzqzc--z/AC%20Tune%20Maker",
         loadTuneBtn: "마을멜로디 불러오기",
         tuneCodeLabel: "마을멜로디 코드:",
@@ -217,7 +217,7 @@ class LanguageManager {
         this.updateElementText('header p', 'headerSubtitle');
         
         // Schedule section
-        this.updateElementText('.schedule h2', 'scheduleTitle');
+        this.updateElementText('.schedule .section-title', 'scheduleTitle');
         this.updateElementText('label[for="hourly"]', 'hourlyOption');
         this.updateElementText('label[for="custom"]', 'customOption');
         this.updateElementText('label[for="minutesLater"]', 'minutesLaterOption');
@@ -229,7 +229,7 @@ class LanguageManager {
         this.updateElementText('#stopSchedule', 'stopScheduleBtn');
         
         // Tune setup section
-        this.updateElementText('.tune-input h2', 'tuneSetupTitle');
+        this.updateElementText('.tune-input .section-title', 'tuneSetupTitle');
         this.updateElementText('label[for="tuneUrl"]', 'tuneUrlLabel');
         this.updateElementText('#tuneUrl', 'tuneUrlPlaceholder', 'placeholder');
         this.updateElementText('#loadTune', 'loadTuneBtn');
@@ -244,7 +244,7 @@ class LanguageManager {
         this.updateElementText('label[for="volume"]', 'volumeLabel');
         
         // Status section
-        this.updateElementText('.status-recent h2', 'statusTitle');
+        this.updateElementText('.status-recent .section-title', 'statusTitle');
         this.updateElementText('.status-info p:nth-child(1) strong', 'scheduleStatusLabel');
         this.updateElementText('.status-info p:nth-child(2) strong', 'nextPlayLabel');
         this.updateElementText('.status-info p:nth-child(3) strong', 'timeLeftLabel');
@@ -299,7 +299,13 @@ class LanguageManager {
         const elements = document.querySelectorAll(selector);
         elements.forEach(element => {
             if (attribute === 'textContent') {
-                element.textContent = translations[this.currentLanguage][translationKey];
+                // Check if the translation contains HTML (for links)
+                const translation = translations[this.currentLanguage][translationKey];
+                if (translation.includes('<a href=')) {
+                    element.innerHTML = translation;
+                } else {
+                    element.textContent = translation;
+                }
             } else if (attribute === 'placeholder') {
                 element.placeholder = translations[this.currentLanguage][translationKey];
             }
