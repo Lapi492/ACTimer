@@ -14,9 +14,12 @@
         </header>
 
         <main>
-            <section class="schedule">
-                <h2>⏰ Schedule Settings</h2>
-                <div class="schedule-options">
+            <section class="schedule collapsible">
+                <div class="section-header">
+                    <h2>⏰ Schedule Settings</h2>
+                </div>
+                <div class="section-content">
+                    <div class="schedule-options">
                     <div class="option">
                         <input type="radio" id="hourly" name="schedule" value="hourly" checked>
                         <label for="hourly">Play every hour (1:00, 2:00, 3:00, etc.)</label>
@@ -24,6 +27,10 @@
                     <div class="option">
                         <input type="radio" id="custom" name="schedule" value="custom">
                         <label for="custom">Custom time</label>
+                    </div>
+                    <div class="option">
+                        <input type="radio" id="minutesLater" name="schedule" value="minutesLater">
+                        <label for="minutesLater">Play in N minutes</label>
                     </div>
                 </div>
 
@@ -40,6 +47,15 @@
                     </div>
                 </div>
 
+                <div class="minutes-later" id="minutesLaterSection" style="display: none;">
+                    <div class="time-inputs">
+                        <div class="input-group">
+                            <label for="minutesLaterInput">Minutes from now:</label>
+                            <input type="number" id="minutesLaterInput" min="1" max="1440" value="5">
+                        </div>
+                    </div>
+                </div>
+
                 <div class="schedule-options">
                     <div class="option">
                         <input type="checkbox" id="scheduledFastPlay" name="scheduledFastPlay">
@@ -50,6 +66,7 @@
                 <div class="schedule-controls">
                     <button id="startSchedule" class="btn btn-success">🚀 Start Schedule</button>
                     <button id="stopSchedule" class="btn btn-danger">⏹️ Stop Schedule</button>
+                </div>
                 </div>
             </section>
 
@@ -71,17 +88,13 @@
                         <button id="editTune" class="btn">Edit</button>
                     </div>
 
-                    <div class="input-group">
-                        <label for="tuneName">Tune Name:</label>
-                        <input type="text" id="tuneName" placeholder="My Town Tune">
-                    </div>
+
 
                     <div class="playback-controls">
                         <h3>🎮 Playback Controls</h3>
                         <div class="controls">
                             <button id="playTune" class="btn btn-primary">▶️ Play Tune</button>
                             <button id="playTuneFast" class="btn btn-warning">⚡ Play Fast (2.0x)</button>
-                            <button id="stopTune" class="btn btn-secondary">⏹️ Stop</button>
                             <div class="volume-control">
                                 <label for="volume">Volume:</label>
                                 <input type="range" id="volume" min="0" max="100" value="50">
@@ -101,6 +114,7 @@
                     <div class="status-info">
                         <p><strong>Schedule Status:</strong> <span id="scheduleStatus">Stopped</span></p>
                         <p><strong>Next Play:</strong> <span id="nextPlay">-</span></p>
+                        <p><strong>Time Left:</strong> <span id="timeLeft">-</span></p>
                         <p><strong>Current Tune:</strong> <span id="currentTune">None loaded</span></p>
                     </div>
                     
@@ -115,8 +129,12 @@
         </main>
     </div>
 
+    <script src="translations.js"></script>
     <script src="script.js"></script>
     <script>
+        // Initialize language manager
+        window.languageManager = new LanguageManager();
+        
         function toggleSection(sectionId) {
             const content = document.getElementById(sectionId);
             const header = content.previousElementSibling;

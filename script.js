@@ -2,9 +2,11 @@ class ACTownTunePlayer {
     constructor() {
         this.currentTune = null;
         this.scheduleInterval = null;
+        this.countdownInterval = null;
         this.audioContext = null;
         this.isPlaying = false;
         this.recentPlays = [];
+        this.nextPlayTime = null;
         
         this.init();
     }
@@ -24,7 +26,6 @@ class ACTownTunePlayer {
         // Playback controls
         document.getElementById('playTune').addEventListener('click', () => this.playTune());
         document.getElementById('playTuneFast').addEventListener('click', () => this.playTuneFast());
-        document.getElementById('stopTune').addEventListener('click', () => this.stopTune());
         document.getElementById('volume').addEventListener('input', (e) => this.updateVolume(e.target.value));
 
         // Schedule controls
@@ -73,25 +74,25 @@ class ACTownTunePlayer {
     loadTuneFromUrl() {
         const url = document.getElementById('tuneUrl').value.trim();
         if (!url) {
-            this.showNotification('Please enter a valid AC Tune Maker URL', 'error');
+            this.showNotification(window.languageManager.getText('enterValidUrl'), 'error');
             return;
         }
 
         const tuneCode = this.parseTuneUrl(url);
         if (!tuneCode) {
-            this.showNotification('Could not extract tune code from URL. Please check the URL format.', 'error');
+            this.showNotification(window.languageManager.getText('couldNotExtractCode'), 'error');
             return;
         }
 
         this.setTuneCode(tuneCode);
-        this.showNotification('Tune loaded successfully!', 'success');
+        this.showNotification(window.languageManager.getText('tuneLoadedSuccess'), 'success');
     }
 
     // Set tune code and update UI
     setTuneCode(code) {
         this.currentTune = code;
         document.getElementById('tuneCode').value = code;
-        document.getElementById('currentTune').textContent = code;
+        document.getElementById('currentTune').textContent = code || window.languageManager.getText('noneLoaded');
         this.saveToLocalStorage();
         this.updateStatus();
     }
@@ -103,11 +104,11 @@ class ACTownTunePlayer {
         
         if (tuneCodeInput.readOnly) {
             tuneCodeInput.readOnly = false;
-            editBtn.textContent = 'Save';
+            editBtn.textContent = window.languageManager.getText('saveBtn');
             tuneCodeInput.focus();
         } else {
             tuneCodeInput.readOnly = true;
-            editBtn.textContent = 'Edit';
+            editBtn.textContent = window.languageManager.getText('editBtn');
             this.setTuneCode(tuneCodeInput.value);
         }
     }
@@ -119,7 +120,7 @@ class ACTownTunePlayer {
         // Validate tune code format (basic validation)
         // Allow letters, numbers, dashes, and underscores
         if (!/^[A-Za-z0-9\-_]+$/.test(code)) {
-            this.showNotification('Invalid tune code format', 'error');
+            this.showNotification(window.languageManager.getText('invalidTuneCode'), 'error');
             return;
         }
     }
@@ -196,11 +197,19 @@ class ACTownTunePlayer {
 
     // Play the entire tune
     async playTune() {
+        if (this.isPlaying) {
+            this.stopTune();
+            return;
+        }
         await this.playTuneWithSpeed(1.0);
     }
 
     // Play the tune at fast speed (2.0x)
     async playTuneFast() {
+        if (this.isPlaying) {
+            this.stopTune();
+            return;
+        }
         await this.playTuneWithSpeed(2.0);
     }
 
@@ -216,12 +225,7 @@ class ACTownTunePlayer {
     // Play tune with specified speed multiplier
     async playTuneWithSpeed(speedMultiplier) {
         if (!this.currentTune) {
-            this.showNotification('No tune loaded. Please load a tune first.', 'error');
-            return;
-        }
-
-        if (this.isPlaying) {
-            this.stopTune();
+            this.showNotification(window.languageManager.getText('noTuneLoaded'), 'error');
             return;
         }
 
@@ -240,10 +244,10 @@ class ACTownTunePlayer {
         
         if (speedMultiplier === 2.0) {
             fastButton.classList.add('playing');
-            fastButton.textContent = '⏸️ Playing Fast...';
+            fastButton.textContent = window.languageManager.getText('playingFastText');
         } else {
             playButton.classList.add('playing');
-            playButton.textContent = '⏸️ Playing...';
+            playButton.textContent = window.languageManager.getText('playingText');
         }
 
         try {
@@ -256,14 +260,14 @@ class ACTownTunePlayer {
             this.addRecentPlay();
         } catch (error) {
             console.error('Error playing tune:', error);
-            this.showNotification('Error playing tune. Please check the tune code.', 'error');
+            this.showNotification(window.languageManager.getText('errorPlayingTune'), 'error');
         }
 
         this.isPlaying = false;
         playButton.classList.remove('playing');
         fastButton.classList.remove('playing');
-        playButton.textContent = '▶️ Play Tune';
-        fastButton.textContent = '⚡ Play Fast (2.0x)';
+        playButton.textContent = window.languageManager.getText('playTuneBtn');
+        fastButton.textContent = window.languageManager.getText('playTuneFastBtn');
     }
 
     // Play tune using continuous oscillator (like original AC Tune Maker)
@@ -342,8 +346,11 @@ class ACTownTunePlayer {
             
             osc.start();
 
+            // Stop the oscillator after the tune duration
             const stopTime = startTime + notesArray.length * delay;
-            this.stopTuneAtTime(stopTime);
+            setTimeout(() => {
+                osc.stop();
+            }, (stopTime - this.audioContext.currentTime) * 1000);
         });
     }
 
@@ -367,28 +374,18 @@ class ACTownTunePlayer {
         return frequencies[note] || 0;
     }
 
-    // Stop tune at specific time (like original AC Tune Maker)
-    stopTuneAtTime(time) {
-        if (!this.audioContext) {
-            return;
-        }
 
-        const fadeoutDuration = 0.25 * 0.4; // Same as original
-        const fadeoutStartTime = time - fadeoutDuration;
-        const fadeoutStopTime = fadeoutStartTime + fadeoutDuration;
-
-        // This would need to be implemented with proper gain node management
-        // For now, we'll use a simpler approach
-        setTimeout(() => {
-            this.isPlaying = false;
-        }, (time - this.audioContext.currentTime) * 1000);
-    }
 
     // Stop playing
     stopTune() {
         this.isPlaying = false;
-        document.getElementById('playTune').classList.remove('playing');
-        document.getElementById('playTune').textContent = '▶️ Play Tune';
+        const playButton = document.getElementById('playTune');
+        const fastButton = document.getElementById('playTuneFast');
+        
+        playButton.classList.remove('playing');
+        fastButton.classList.remove('playing');
+        playButton.textContent = window.languageManager.getText('playTuneBtn');
+        fastButton.textContent = window.languageManager.getText('playTuneFastBtn');
     }
 
     // Get current volume
@@ -409,17 +406,24 @@ class ACTownTunePlayer {
     // Handle schedule type change
     onScheduleTypeChange(type) {
         const customSection = document.getElementById('customTimeSection');
+        const minutesLaterSection = document.getElementById('minutesLaterSection');
+        
+        // Hide all sections first
+        customSection.style.display = 'none';
+        minutesLaterSection.style.display = 'none';
+        
+        // Show relevant section
         if (type === 'custom') {
             customSection.style.display = 'block';
-        } else {
-            customSection.style.display = 'none';
+        } else if (type === 'minutesLater') {
+            minutesLaterSection.style.display = 'block';
         }
     }
 
     // Start scheduling
     startSchedule() {
         if (!this.currentTune) {
-            this.showNotification('No tune loaded. Please load a tune first.', 'error');
+            this.showNotification(window.languageManager.getText('noTuneLoaded'), 'error');
             return;
         }
 
@@ -430,17 +434,26 @@ class ACTownTunePlayer {
             const minute = parseInt(document.getElementById('customMinute').value);
             
             if (hour < 0 || hour > 23 || minute < 0 || minute > 59) {
-                this.showNotification('Please enter valid time values.', 'error');
+                this.showNotification(window.languageManager.getText('invalidTimeValues'), 'error');
                 return;
             }
             
             this.startCustomSchedule(hour, minute);
+        } else if (scheduleType === 'minutesLater') {
+            const minutes = parseInt(document.getElementById('minutesLaterInput').value);
+            
+            if (minutes < 1 || minutes > 1440) {
+                this.showNotification(window.languageManager.getText('invalidTimeValues'), 'error');
+                return;
+            }
+            
+            this.startMinutesLaterSchedule(minutes);
         } else {
             this.startHourlySchedule();
         }
 
-        document.getElementById('scheduleStatus').textContent = 'Running';
-        this.showNotification('Schedule started!', 'success');
+        document.getElementById('scheduleStatus').textContent = window.languageManager.getText('runningStatus');
+        this.showNotification(window.languageManager.getText('scheduleStarted'), 'success');
     }
 
     // Start hourly schedule
@@ -471,6 +484,25 @@ class ACTownTunePlayer {
         this.updateNextPlayTime(hour, minute);
     }
 
+    // Start minutes later schedule
+    startMinutesLaterSchedule(minutes) {
+        this.stopSchedule();
+        
+        const now = new Date();
+        this.nextPlayTime = new Date(now.getTime() + minutes * 60000);
+        
+        this.scheduleInterval = setInterval(() => {
+            const currentTime = new Date();
+            if (currentTime >= this.nextPlayTime) {
+                this.playScheduledTune();
+                this.stopSchedule(); // Stop after playing once
+            }
+        }, 1000); // Check every second for more accurate countdown
+        
+        this.updateNextPlayTimeFromDate(this.nextPlayTime);
+        this.startCountdown();
+    }
+
     // Stop scheduling
     stopSchedule() {
         if (this.scheduleInterval) {
@@ -478,8 +510,15 @@ class ACTownTunePlayer {
             this.scheduleInterval = null;
         }
         
-        document.getElementById('scheduleStatus').textContent = 'Stopped';
+        if (this.countdownInterval) {
+            clearInterval(this.countdownInterval);
+            this.countdownInterval = null;
+        }
+        
+        this.nextPlayTime = null;
+        document.getElementById('scheduleStatus').textContent = window.languageManager.getText('stoppedStatus');
         document.getElementById('nextPlay').textContent = '-';
+        document.getElementById('timeLeft').textContent = '-';
     }
 
     // Update next play time display
@@ -500,15 +539,50 @@ class ACTownTunePlayer {
             }
         }
         
+        this.nextPlayTime = nextPlay;
         document.getElementById('nextPlay').textContent = nextPlay.toLocaleTimeString();
+        this.startCountdown();
+    }
+
+    // Update next play time from date object
+    updateNextPlayTimeFromDate(date) {
+        this.nextPlayTime = date;
+        document.getElementById('nextPlay').textContent = date.toLocaleTimeString();
+    }
+
+    // Start countdown timer
+    startCountdown() {
+        if (this.countdownInterval) {
+            clearInterval(this.countdownInterval);
+        }
+        
+        this.countdownInterval = setInterval(() => {
+            if (this.nextPlayTime) {
+                const now = new Date();
+                const timeDiff = this.nextPlayTime.getTime() - now.getTime();
+                
+                if (timeDiff <= 0) {
+                    document.getElementById('timeLeft').textContent = window.languageManager.getText('countdownNow');
+                    return;
+                }
+                
+                const minutes = Math.floor(timeDiff / 60000);
+                const seconds = Math.floor((timeDiff % 60000) / 1000);
+                
+                if (minutes > 0) {
+                    document.getElementById('timeLeft').textContent = `${minutes}m ${seconds}s`;
+                } else {
+                    document.getElementById('timeLeft').textContent = `${seconds}s`;
+                }
+            }
+        }, 1000);
     }
 
     // Add to recent plays
     addRecentPlay() {
         const playEntry = {
             time: new Date().toLocaleTimeString(),
-            tune: this.currentTune,
-            name: document.getElementById('tuneName').value || 'Unnamed Tune'
+            tune: this.currentTune
         };
         
         this.recentPlays.unshift(playEntry);
@@ -525,14 +599,14 @@ class ACTownTunePlayer {
         const container = document.getElementById('recentPlays');
         
         if (this.recentPlays.length === 0) {
-            container.innerHTML = '<p class="no-plays">No tunes played yet</p>';
+            container.innerHTML = `<p class="no-plays">${window.languageManager.getText('noPlaysYet')}</p>`;
             return;
         }
         
         container.innerHTML = this.recentPlays.map(play => `
             <div class="play-entry">
                 <div class="time">${play.time}</div>
-                <div class="tune">${play.name} (${play.tune})</div>
+                <div class="tune">${play.tune}</div>
             </div>
         `).join('');
     }
@@ -541,6 +615,8 @@ class ACTownTunePlayer {
     updateStatus() {
         if (this.currentTune) {
             document.getElementById('currentTune').textContent = this.currentTune;
+        } else {
+            document.getElementById('currentTune').textContent = window.languageManager.getText('noneLoaded');
         }
     }
 
@@ -588,7 +664,6 @@ class ACTownTunePlayer {
     saveToLocalStorage() {
         const data = {
             currentTune: this.currentTune,
-            tuneName: document.getElementById('tuneName').value,
             recentPlays: this.recentPlays,
             volume: this.getVolume(),
             scheduledFastPlay: document.getElementById('scheduledFastPlay').checked
@@ -603,9 +678,6 @@ class ACTownTunePlayer {
             if (data) {
                 if (data.currentTune) {
                     this.setTuneCode(data.currentTune);
-                }
-                if (data.tuneName) {
-                    document.getElementById('tuneName').value = data.tuneName;
                 }
                 if (data.recentPlays) {
                     this.recentPlays = data.recentPlays;
