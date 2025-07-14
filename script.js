@@ -7,6 +7,7 @@ class ACTownTunePlayer {
         this.isPlaying = false;
         this.recentPlays = [];
         this.nextPlayTime = null;
+        this.bellSynth = null;
         
         this.init();
     }
@@ -15,6 +16,88 @@ class ACTownTunePlayer {
         this.setupEventListeners();
         this.loadFromLocalStorage();
         this.updateStatus();
+        this.initBellSynth();
+    }
+
+    // Initialize bell synthesizer for fast play
+    initBellSynth() {
+        if (typeof Tone !== 'undefined') {
+            // Create a big church bell sound using multiple oscillators
+            this.bellSynth = new Tone.PolySynth(Tone.Synth, {
+                oscillator: {
+                    type: "sine"
+                },
+                envelope: {
+                    attack: 0.1,      // Slower attack for big bell
+                    decay: 0.8,       // Longer decay
+                    sustain: 0.4,     // Higher sustain
+                    release: 4.0      // Much longer release for resonance
+                }
+            }).toDestination();
+            
+            // Add lower harmonics for church bell depth
+            this.bellHarmonics = new Tone.PolySynth(Tone.Synth, {
+                oscillator: {
+                    type: "triangle"
+                },
+                envelope: {
+                    attack: 0.15,
+                    decay: 1.2,
+                    sustain: 0.2,
+                    release: 3.5
+                }
+            }).toDestination();
+            
+            // Add third harmonic layer for richness
+            this.bellThirdHarmonic = new Tone.PolySynth(Tone.Synth, {
+                oscillator: {
+                    type: "sine"
+                },
+                envelope: {
+                    attack: 0.2,
+                    decay: 0.6,
+                    sustain: 0.1,
+                    release: 2.5
+                }
+            }).toDestination();
+            
+            // Add sub-bass layer for lower frequency
+            this.bellSubBass = new Tone.PolySynth(Tone.Synth, {
+                oscillator: {
+                    type: "sine"
+                },
+                envelope: {
+                    attack: 0.2,
+                    decay: 1.5,
+                    sustain: 0.3,
+                    release: 5.0
+                }
+            }).toDestination();
+            
+            // Heavy reverb for church acoustics
+            this.reverb = new Tone.Reverb({
+                decay: 8,             // Much longer decay for church echo
+                preDelay: 0.02,       // Shorter pre-delay
+                wet: 0.6              // More reverb
+            }).toDestination();
+            
+            // Add delay for church bell effect
+            this.delay = new Tone.FeedbackDelay({
+                delayTime: 0.3,
+                feedback: 0.4,
+                wet: 0.3
+            }).toDestination();
+            
+            // Connect all layers
+            this.bellSynth.connect(this.reverb);
+            this.bellSynth.connect(this.delay);
+            this.bellHarmonics.connect(this.reverb);
+            this.bellHarmonics.connect(this.delay);
+            this.bellThirdHarmonic.connect(this.reverb);
+            this.bellThirdHarmonic.connect(this.delay);
+            this.bellSubBass.connect(this.reverb);
+            this.bellSubBass.connect(this.delay);
+        }
     }
 
     setupEventListeners() {
@@ -204,19 +287,154 @@ class ACTownTunePlayer {
         await this.playTuneWithSpeed(1.0);
     }
 
-    // Play the tune at fast speed (2.0x)
+    // Play the tune at fast speed (2.0x) with bell sound
     async playTuneFast() {
         if (this.isPlaying) {
             this.stopTune();
             return;
         }
-        await this.playTuneWithSpeed(2.0);
+        await this.playBellSound();
+    }
+
+    // Play bell sound for fast play
+    async playBellSound() {
+        if (!this.currentTune) {
+            this.showNotification(window.languageManager.getText('noTuneLoaded'), 'error');
+            return;
+        }
+
+        // Initialize Tone.js if not already done
+        if (typeof Tone !== 'undefined' && Tone.context.state !== 'running') {
+            await Tone.start();
+        }
+
+        this.isPlaying = true;
+        
+        // Update button states
+        const fastButton = document.getElementById('playTuneFast');
+        fastButton.classList.add('playing');
+        fastButton.textContent = window.languageManager.getText('playingFastText');
+
+        try {
+            const notes = this.parseTuneCode(this.currentTune);
+            console.log('Playing bell sound for notes:', notes);
+            
+            // Play bell sound sequence
+            await this.playBellSequence(notes);
+
+            // Only add to recent plays if we completed the sequence
+            if (this.isPlaying) {
+                this.addRecentPlay();
+            }
+        } catch (error) {
+            console.error('Error playing bell sound:', error);
+            this.showNotification(window.languageManager.getText('errorPlayingTune'), 'error');
+        } finally {
+            // Always reset button states and playing status
+            this.isPlaying = false;
+            const fastButton2 = document.getElementById('playTuneFast');
+            fastButton2.classList.remove('playing');
+            fastButton2.textContent = window.languageManager.getText('playTuneFastBtn');
+        }
+    }
+
+    // Play bell sequence using Tone.js
+    async playBellSequence(notes) {
+        return new Promise((resolve) => {
+            if (notes.length === 0) {
+                resolve();
+                return;
+            }
+
+            const volume = this.getVolume() / 100;
+            const delay = 0.7; // Slower delay for more bell-like timing
+            
+            // Set volume for bell synths
+            if (this.bellSynth) {
+                this.bellSynth.volume.value = Tone.gainToDb(volume * 0.25);
+            }
+            if (this.bellHarmonics) {
+                this.bellHarmonics.volume.value = Tone.gainToDb(volume * 0.15);
+            }
+            if (this.bellThirdHarmonic) {
+                this.bellThirdHarmonic.volume.value = Tone.gainToDb(volume * 0.1);
+            }
+            if (this.bellSubBass) {
+                this.bellSubBass.volume.value = Tone.gainToDb(volume * 0.2);
+            }
+
+            let notesPlayed = 0;
+            let timeouts = []; // Track all timeouts for cleanup
+
+            const playNextNote = () => {
+                if (notesPlayed >= notes.length || !this.isPlaying) {
+                    // Clear any remaining timeouts
+                    timeouts.forEach(clearTimeout);
+                    resolve();
+                    return;
+                }
+
+                const note = notes[notesPlayed];
+                if (note.frequency > 0) {
+                    // Convert frequency to note name for Tone.js
+                    const noteName = this.frequencyToNoteName(note.frequency);
+                    
+                    // Play main bell sound (one octave lower)
+                    const lowerNoteName = this.frequencyToNoteName(note.frequency * 0.5);
+                    this.bellSynth.triggerAttackRelease(lowerNoteName, "8n");
+                    
+                    // Play harmonics (same octave as original)
+                    if (this.bellHarmonics) {
+                        const harmonicNote = this.frequencyToNoteName(note.frequency);
+                        this.bellHarmonics.triggerAttackRelease(harmonicNote, "8n");
+                    }
+
+                    // Play third harmonic (fifth interval, same octave)
+                    if (this.bellThirdHarmonic) {
+                        const thirdHarmonicNote = this.frequencyToNoteName(note.frequency * 1.5);
+                        this.bellThirdHarmonic.triggerAttackRelease(thirdHarmonicNote, "8n");
+                    }
+
+                    // Play sub-bass (two octaves lower)
+                    if (this.bellSubBass) {
+                        const subBassNote = this.frequencyToNoteName(note.frequency * 0.25);
+                        this.bellSubBass.triggerAttackRelease(subBassNote, "8n");
+                    }
+                }
+
+                notesPlayed++;
+                
+                // Schedule next note only if still playing
+                if (notesPlayed < notes.length && this.isPlaying) {
+                    const timeout = setTimeout(playNextNote, delay * 1000);
+                    timeouts.push(timeout);
+                } else {
+                    // All notes played or stopped
+                    timeouts.forEach(clearTimeout);
+                    resolve();
+                }
+            };
+
+            // Start playing
+            playNextNote();
+        });
+    }
+
+    // Convert frequency to note name for Tone.js
+    frequencyToNoteName(frequency) {
+        const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+        const a4 = 440;
+        const c0 = a4 * Math.pow(2, -4.75);
+        const halfStepsBelowMiddleC = Math.round(12 * Math.log2(frequency / c0));
+        const octave = Math.floor(halfStepsBelowMiddleC / 12);
+        const noteIndex = (halfStepsBelowMiddleC % 12 + 12) % 12;
+        return noteNames[noteIndex] + octave;
     }
 
     // Play tune for scheduled playback (respects fast playback setting)
     async playScheduledTune() {
         if (this.isScheduledFastPlayEnabled()) {
-            await this.playTuneWithSpeed(2.0);
+            await this.playBellSound();
         } else {
             await this.playTuneWithSpeed(1.0);
         }
@@ -379,6 +597,21 @@ class ACTownTunePlayer {
     // Stop playing
     stopTune() {
         this.isPlaying = false;
+        
+        // Stop bell synths if they're playing
+        if (this.bellSynth && typeof this.bellSynth.releaseAll === 'function') {
+            this.bellSynth.releaseAll();
+        }
+        if (this.bellHarmonics && typeof this.bellHarmonics.releaseAll === 'function') {
+            this.bellHarmonics.releaseAll();
+        }
+        if (this.bellThirdHarmonic && typeof this.bellThirdHarmonic.releaseAll === 'function') {
+            this.bellThirdHarmonic.releaseAll();
+        }
+        if (this.bellSubBass && typeof this.bellSubBass.releaseAll === 'function') {
+            this.bellSubBass.releaseAll();
+        }
+        
         const playButton = document.getElementById('playTune');
         const fastButton = document.getElementById('playTuneFast');
         
