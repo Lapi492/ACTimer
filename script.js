@@ -116,6 +116,7 @@ class ACTownTunePlayer {
             radio.addEventListener('change', (e) => this.onScheduleTypeChange(e.target.value));
         });
         document.getElementById('scheduledFastPlay').addEventListener('change', () => this.saveToLocalStorage());
+        document.getElementById('notifyBefore5Minutes').addEventListener('change', () => this.saveToLocalStorage());
         document.getElementById('startSchedule').addEventListener('click', () => this.startSchedule());
         document.getElementById('stopSchedule').addEventListener('click', () => this.stopSchedule());
 
@@ -631,6 +632,11 @@ class ACTownTunePlayer {
         return document.getElementById('scheduledFastPlay').checked;
     }
 
+    // Check if notify before 5 minutes is enabled
+    isNotifyBefore5MinutesEnabled() {
+        return document.getElementById('notifyBefore5Minutes').checked;
+    }
+
     // Update volume display
     updateVolume(value) {
         document.getElementById('volumeValue').textContent = value + '%';
@@ -695,7 +701,8 @@ class ACTownTunePlayer {
         
         this.scheduleInterval = setInterval(() => {
             const now = new Date();
-            if (now.getMinutes() === 0) {
+            const targetMinute = this.isNotifyBefore5MinutesEnabled() ? 55 : 0;
+            if (now.getMinutes() === targetMinute) {
                 this.playScheduledTune();
             }
         }, 60000); // Check every minute
@@ -709,7 +716,21 @@ class ACTownTunePlayer {
         
         this.scheduleInterval = setInterval(() => {
             const now = new Date();
-            if (now.getHours() === hour && now.getMinutes() === minute) {
+            let targetHour = hour;
+            let targetMinute = minute;
+            
+            if (this.isNotifyBefore5MinutesEnabled()) {
+                targetMinute -= 5;
+                if (targetMinute < 0) {
+                    targetMinute += 60;
+                    targetHour -= 1;
+                    if (targetHour < 0) {
+                        targetHour += 24;
+                    }
+                }
+            }
+            
+            if (now.getHours() === targetHour && now.getMinutes() === targetMinute) {
                 this.playScheduledTune();
             }
         }, 60000); // Check every minute
@@ -722,7 +743,14 @@ class ACTownTunePlayer {
         this.stopSchedule();
         
         const now = new Date();
-        this.nextPlayTime = new Date(now.getTime() + minutes * 60000);
+        let adjustedMinutes = minutes;
+        if (this.isNotifyBefore5MinutesEnabled()) {
+            adjustedMinutes -= 5;
+            if (adjustedMinutes < 0) {
+                adjustedMinutes = 0; // Don't go negative, play immediately
+            }
+        }
+        this.nextPlayTime = new Date(now.getTime() + adjustedMinutes * 60000);
         
         this.scheduleInterval = setInterval(() => {
             const currentTime = new Date();
@@ -766,7 +794,8 @@ class ACTownTunePlayer {
             }
         } else {
             // Hourly schedule
-            nextPlay.setMinutes(0, 0, 0);
+            const targetMinute = this.isNotifyBefore5MinutesEnabled() ? 55 : 0;
+            nextPlay.setMinutes(targetMinute, 0, 0);
             if (nextPlay <= now) {
                 nextPlay.setHours(nextPlay.getHours() + 1);
             }
@@ -802,11 +831,21 @@ class ACTownTunePlayer {
                 const minutes = Math.floor(timeDiff / 60000);
                 const seconds = Math.floor((timeDiff % 60000) / 1000);
                 
+                let timeText;
                 if (minutes > 0) {
-                    document.getElementById('timeLeft').textContent = `${minutes}m ${seconds}s`;
+                    timeText = `${minutes}m ${seconds}s`;
                 } else {
-                    document.getElementById('timeLeft').textContent = `${seconds}s`;
+                    timeText = `${seconds}s`;
                 }
+                
+                // If notify before 5 minutes is enabled, show explanation
+                if (this.isNotifyBefore5MinutesEnabled()) {
+                    const actualMinutes = minutes + 5;
+                    const actualTimeText = actualMinutes > 0 ? `${actualMinutes}m ${seconds}s` : `${seconds}s`;
+                    timeText += window.languageManager.getText('minutesBeforeText') + actualTimeText + window.languageManager.getText('minutesBeforeTextEnd');
+                }
+                
+                document.getElementById('timeLeft').textContent = timeText;
             }
         }, 1000);
     }
@@ -899,7 +938,8 @@ class ACTownTunePlayer {
             currentTune: this.currentTune,
             recentPlays: this.recentPlays,
             volume: this.getVolume(),
-            scheduledFastPlay: document.getElementById('scheduledFastPlay').checked
+            scheduledFastPlay: document.getElementById('scheduledFastPlay').checked,
+            notifyBefore5Minutes: document.getElementById('notifyBefore5Minutes').checked
         };
         localStorage.setItem('acTownTunePlayer', JSON.stringify(data));
     }
@@ -922,6 +962,9 @@ class ACTownTunePlayer {
                 }
                 if (data.scheduledFastPlay !== undefined) {
                     document.getElementById('scheduledFastPlay').checked = data.scheduledFastPlay;
+                }
+                if (data.notifyBefore5Minutes !== undefined) {
+                    document.getElementById('notifyBefore5Minutes').checked = data.notifyBefore5Minutes;
                 }
             }
         } catch (error) {

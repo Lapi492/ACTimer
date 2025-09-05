@@ -14,6 +14,7 @@ const translations = {
         minuteLabel: "Minute:",
         minutesLaterLabel: "Minutes from now:",
         fastPlayOption: "Play at slow speed",
+        notifyBefore5MinutesOption: "Notify me 5 minutes before",
         startScheduleBtn: "Start Schedule",
         stopScheduleBtn: "Stop Schedule",
         
@@ -57,6 +58,8 @@ const translations = {
         invalidTimeValues: "Please enter valid time values.",
         errorPlayingTune: "Error playing tune. Please check the tune code.",
         countdownNow: "Now!",
+        minutesBeforeText: " (5 minutes before ",
+        minutesBeforeTextEnd: ")",
         
         // Language switcher
         languageBtn: "🌐",
@@ -78,6 +81,7 @@ const translations = {
         minuteLabel: "분:",
         minutesLaterLabel: "몇 분 후에 알려드릴까요?:",
         fastPlayOption: "마을멜로디를 느린 속도로 재생",
+        notifyBefore5MinutesOption: "5분 전에 미리 알림",
         startScheduleBtn: "타이머 예약",
         stopScheduleBtn: "타이머 중지",
         
@@ -121,6 +125,8 @@ const translations = {
         invalidTimeValues: "유효한 시간 값을 입력해주세요.",
         errorPlayingTune: "마을멜로디 재생 중 오류가 발생했습니다. 코드를 확인해주세요.",
         countdownNow: "지금",
+        minutesBeforeText: " (",
+        minutesBeforeTextEnd: " 5분 전)",
         
         // Language switcher
         languageBtn: "🌐",
@@ -225,6 +231,7 @@ class LanguageManager {
         this.updateElementText('label[for="customMinute"]', 'minuteLabel');
         this.updateElementText('label[for="minutesLaterInput"]', 'minutesLaterLabel');
         this.updateElementText('label[for="scheduledFastPlay"]', 'fastPlayOption');
+        this.updateElementText('label[for="notifyBefore5Minutes"]', 'notifyBefore5MinutesOption');
         this.updateElementText('#startSchedule', 'startScheduleBtn');
         this.updateElementText('#stopSchedule', 'stopScheduleBtn');
         
